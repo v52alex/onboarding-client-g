@@ -1,21 +1,22 @@
 # onboarding-client-g
 
-Orquestador de onboarding dirigido por interacciones JSON.
+Onboarding orchestrator driven by JSON interactions.
 
-## Decisiones principales
+## Key Decisions
 
-- Monolito modular para mantener despliegue y operación sencillos.
-- Java 21 y Spring Boot 3.5.
-- API First con contrato OpenAPI versionado.
-- Workflow explícito en `src/main/resources/interactions/onboarding.json`.
-- Estado persistente con JPA, Flyway y bloqueo optimista.
-- H2 para desarrollo y PostgreSQL mediante el perfil `postgres`.
-- Integraciones externas detrás de puertos y adaptadores.
+- Modular monolith for simple deployment and operation.
+- Java 21 and Spring Boot 3.5.
+- API-first design with a versioned OpenAPI contract.
+- Explicit workflow in `src/main/resources/interactions/onboarding.json`.
+- Persistent state using JPA, Flyway, and optimistic locking.
+- H2 for development and PostgreSQL through the `postgres` profile.
+- External integrations isolated behind ports and adapters.
 
-No se implementó un motor BPMN genérico. El servicio solo contiene las capacidades
-necesarias para este dominio: pasos, acciones, resultados y transiciones.
+A generic BPMN engine was intentionally not implemented. The service includes
+only the capabilities required by this domain: steps, actions, outcomes, and
+transitions.
 
-## Flujo
+## Workflow
 
 ```mermaid
 flowchart LR
@@ -31,24 +32,24 @@ flowchart LR
     I --> J[Completed]
 ```
 
-## Ejecutar
+## Run the Application
 
-Requisitos:
+Requirements:
 
 - JDK 21
-- Maven 3.6.3 o superior
+- Maven 3.6.3 or later
 
 ```bash
 mvn spring-boot:run
 ```
 
-Health check:
+Check service health:
 
 ```bash
 curl http://localhost:8080/actuator/health
 ```
 
-Crear un caso:
+Create a case:
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/onboarding-cases \
@@ -56,13 +57,13 @@ curl -X POST http://localhost:8080/api/v1/onboarding-cases \
   -d '{"workflowKey":"onboarding"}'
 ```
 
-Consultar la interacción actual:
+Retrieve the current interaction:
 
 ```bash
 curl http://localhost:8080/api/v1/onboarding-cases/{caseId}/interaction
 ```
 
-Ejecutar su acción:
+Execute its action:
 
 ```bash
 curl -X POST \
@@ -80,37 +81,38 @@ export DB_PASSWORD='change-me'
 mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 ```
 
-No se deben versionar credenciales. En producción deben inyectarse desde un gestor
-de secretos.
+Credentials must never be committed. In production, inject them through a
+secrets manager.
 
-## Integrar un proveedor biométrico
+## Integrate a Biometric Provider
 
-La aplicación depende de `BiometricVerificationPort`, no de un SDK específico.
-Para integrar un proveedor externo:
+The application depends on `BiometricVerificationPort`, not on a specific SDK.
+To integrate an external provider:
 
-1. Crear un adaptador que implemente `BiometricVerificationPort`.
-2. Activarlo mediante una propiedad, por ejemplo
+1. Create an adapter that implements `BiometricVerificationPort`.
+2. Enable it through a property, for example:
    `onboarding.integrations.biometric.provider=external`.
-3. Mantener credenciales, timeouts, retries e idempotencia dentro del adaptador.
-4. Añadir pruebas de contrato contra el sandbox del proveedor.
+3. Keep credentials, timeouts, retries, and idempotency logic inside the
+   adapter.
+4. Add contract tests against the provider's sandbox.
 
-El adaptador inicial `none` devuelve `MANUAL_REVIEW`, lo que permite probar el
-onboarding completo sin simular una aprobación biométrica.
+The initial `none` adapter returns `MANUAL_REVIEW`, allowing the complete
+onboarding flow to be tested without simulating biometric approval.
 
-## Contrato y pruebas
+## Contract and Tests
 
 - OpenAPI: `src/main/resources/static/openapi/onboarding-api.yaml`
 - Postman: `postman/collection.json`
-- Reporte de pruebas: `docs/test-report.md`
-- Pruebas: `mvn test`
+- Test report: `docs/test-report.md`
+- Tests: `mvn test`
 
-La colección Postman guarda automáticamente el `caseId` y puede ejecutarse
-completa en orden para recorrer el onboarding de principio a fin.
+The Postman collection automatically stores the `caseId` and can be executed
+sequentially to run through the complete onboarding flow.
 
-## Próximos incrementos
+## Planned Improvements
 
-- Autenticación y autorización según el consumidor real.
-- DTO y validaciones específicas para cada acción.
-- Auditoría de transiciones sin almacenar datos sensibles.
-- Idempotency keys para acciones con efectos externos.
-- Métricas de duración y abandono por paso.
+- Authentication and authorization based on the actual consumer.
+- Action-specific DTOs and validation.
+- Transition auditing without storing sensitive data.
+- Idempotency keys for actions with external side effects.
+- Duration and abandonment metrics for each step.
