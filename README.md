@@ -1,8 +1,6 @@
 # onboarding-client-g
 
-Orquestador de onboarding dirigido por interacciones JSON. Reimplementa el flujo
-principal de `us-onboarding-service` sin Backbase Flow/Journey, Camunda, BOAT,
-SendGrid, Twilio, Jumio, Smartystreets ni servicios de Banesco/ComplyAdvantage.
+Orquestador de onboarding dirigido por interacciones JSON.
 
 ## Decisiones principales
 
@@ -88,11 +86,11 @@ de secretos.
 ## Integrar un proveedor biométrico
 
 La aplicación depende de `BiometricVerificationPort`, no de un SDK específico.
-Para integrar Jumio u otro proveedor:
+Para integrar un proveedor externo:
 
 1. Crear un adaptador que implemente `BiometricVerificationPort`.
 2. Activarlo mediante una propiedad, por ejemplo
-   `onboarding.integrations.biometric.provider=jumio`.
+   `onboarding.integrations.biometric.provider=external`.
 3. Mantener credenciales, timeouts, retries e idempotencia dentro del adaptador.
 4. Añadir pruebas de contrato contra el sandbox del proveedor.
 
