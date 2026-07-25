@@ -102,7 +102,12 @@ onboarding completo sin simular una aprobación biométrica.
 ## Contrato y pruebas
 
 - OpenAPI: `src/main/resources/static/openapi/onboarding-api.yaml`
+- Postman: `postman/collection.json`
+- Reporte de pruebas: `docs/test-report.md`
 - Pruebas: `mvn test`
+
+La colección Postman guarda automáticamente el `caseId` y puede ejecutarse
+completa en orden para recorrer el onboarding de principio a fin.
 
 ## Próximos incrementos
 
@@ -111,4 +116,3 @@ onboarding completo sin simular una aprobación biométrica.
 - Auditoría de transiciones sin almacenar datos sensibles.
 - Idempotency keys para acciones con efectos externos.
 - Métricas de duración y abandono por paso.
-

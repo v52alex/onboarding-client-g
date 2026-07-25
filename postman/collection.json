@@ -1,0 +1,252 @@
+{
+  "info": {
+    "_postman_id": "26ac214b-4492-4f66-972d-3ebfa9460fa5",
+    "name": "Onboarding Client G",
+    "description": "Colección para ejecutar y verificar el flujo completo del orquestador JSON. Ejecute las solicitudes en el orden definido.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "caseId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/actuator/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Service is healthy', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('UP');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Start onboarding",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"workflowKey\": \"onboarding\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Case is created', function () {",
+              "  pm.response.to.have.status(201);",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.currentStep).to.eql('product-selection');",
+              "  pm.collectionVariables.set('caseId', body.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Get current interaction",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/interaction"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Product selection is the current interaction', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().action).to.eql('select-products');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Select products",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productIds\": [\"checking-account\"]\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/select-products"
+      }
+    },
+    {
+      "name": "04 - Accept terms",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accepted\": true,\n  \"documentVersion\": \"1.0\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/accept-terms"
+      }
+    },
+    {
+      "name": "05 - Submit personal data",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"firstName\": \"Alex\",\n  \"lastName\": \"Chavez\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"email\": \"alex@example.com\",\n  \"phoneNumber\": \"+50370000000\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-personal-data"
+      }
+    },
+    {
+      "name": "06 - Submit KYC",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"occupation\": \"Software Engineer\",\n  \"monthlyIncome\": 2500,\n  \"sourceOfFunds\": \"SALARY\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-kyc"
+      }
+    },
+    {
+      "name": "07 - Submit address",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"country\": \"SV\",\n  \"city\": \"San Salvador\",\n  \"line1\": \"Example address\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-address"
+      }
+    },
+    {
+      "name": "08 - Verify contact",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"channel\": \"EMAIL\",\n  \"verified\": true\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/verify-contact"
+      }
+    },
+    {
+      "name": "09 - Verify identity",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentType\": \"PASSPORT\",\n  \"documentReference\": \"local-test-reference\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/verify-identity"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('No external biometric provider routes to manual review', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().data.identityVerification.status).to.eql('MANUAL_REVIEW');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Submit enrollment",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"alex.chavez\",\n  \"termsAccepted\": true\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-enrollment"
+      }
+    },
+    {
+      "name": "11 - Accept contract",
+      "request": {
+        "method": "POST",
+        "header": [{"key": "Content-Type", "value": "application/json"}],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"accepted\": true,\n  \"contractVersion\": \"1.0\"\n}"
+        },
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/accept-contract"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Onboarding is completed', function () {",
+              "  pm.response.to.have.status(200);",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.status).to.eql('COMPLETED');",
+              "  pm.expect(body.currentStep).to.eql('completed');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Get completed case",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Persisted case remains completed', function () {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+
