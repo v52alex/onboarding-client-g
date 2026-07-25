@@ -1,0 +1,78 @@
+{
+  "key": "onboarding",
+  "version": 1,
+  "initialStep": "product-selection",
+  "steps": [
+    {
+      "name": "product-selection",
+      "action": "select-products",
+      "terminal": false,
+      "transitions": { "success": "terms-and-conditions" }
+    },
+    {
+      "name": "terms-and-conditions",
+      "action": "accept-terms",
+      "terminal": false,
+      "transitions": { "success": "personal-data" }
+    },
+    {
+      "name": "personal-data",
+      "action": "submit-personal-data",
+      "terminal": false,
+      "transitions": { "success": "kyc" }
+    },
+    {
+      "name": "kyc",
+      "action": "submit-kyc",
+      "terminal": false,
+      "transitions": { "success": "address" }
+    },
+    {
+      "name": "address",
+      "action": "submit-address",
+      "terminal": false,
+      "transitions": { "success": "contact-verification" }
+    },
+    {
+      "name": "contact-verification",
+      "action": "verify-contact",
+      "terminal": false,
+      "transitions": { "success": "identity-verification" }
+    },
+    {
+      "name": "identity-verification",
+      "action": "verify-identity",
+      "terminal": false,
+      "transitions": {
+        "verified": "enrollment",
+        "manual-review": "enrollment",
+        "rejected": "declined"
+      }
+    },
+    {
+      "name": "enrollment",
+      "action": "submit-enrollment",
+      "terminal": false,
+      "transitions": { "success": "contract-acceptance" }
+    },
+    {
+      "name": "contract-acceptance",
+      "action": "accept-contract",
+      "terminal": false,
+      "transitions": { "success": "completed" }
+    },
+    {
+      "name": "completed",
+      "action": null,
+      "terminal": true,
+      "transitions": {}
+    },
+    {
+      "name": "declined",
+      "action": null,
+      "terminal": true,
+      "transitions": {}
+    }
+  ]
+}
+

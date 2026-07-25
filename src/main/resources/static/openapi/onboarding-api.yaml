@@ -1,0 +1,148 @@
+openapi: 3.0.3
+info:
+  title: Onboarding Orchestrator API
+  version: 1.0.0
+paths:
+  /api/v1/onboarding-cases:
+    post:
+      operationId: startOnboarding
+      summary: Start an onboarding case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartCaseRequest'
+      responses:
+        '201':
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/v1/onboarding-cases/{caseId}:
+    get:
+      operationId: getOnboarding
+      summary: Get an onboarding case
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Current case state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/onboarding-cases/{caseId}/interaction:
+    get:
+      operationId: getCurrentInteraction
+      summary: Get the current interaction
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Current workflow interaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractionResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/onboarding-cases/{caseId}/actions/{action}:
+    post:
+      operationId: executeInteractionAction
+      summary: Execute the action allowed by the current interaction
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - name: action
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CaseResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Action is not valid for the current step
+components:
+  parameters:
+    CaseId:
+      name: caseId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    StartCaseRequest:
+      type: object
+      required: [workflowKey]
+      properties:
+        workflowKey:
+          type: string
+          example: onboarding
+    CaseResponse:
+      type: object
+      required: [id, workflowKey, currentStep, status, data, version, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflowKey:
+          type: string
+        currentStep:
+          type: string
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETED, DECLINED]
+        data:
+          type: object
+          additionalProperties: true
+        version:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    InteractionResponse:
+      type: object
+      required: [caseId, step, terminal, status]
+      properties:
+        caseId:
+          type: string
+          format: uuid
+        step:
+          type: string
+        action:
+          type: string
+          nullable: true
+        terminal:
+          type: boolean
+        status:
+          type: string
+  responses:
+    BadRequest:
+      description: Invalid request
+    NotFound:
+      description: Case not found
+

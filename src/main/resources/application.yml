@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: onboarding-client-g
+  datasource:
+    url: jdbc:h2:mem:onboarding;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+server:
+  shutdown: graceful
+
+onboarding:
+  integrations:
+    biometric:
+      provider: none
+
