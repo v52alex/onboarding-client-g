@@ -10,6 +10,11 @@ import java.util.UUID;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 class IdentityVerificationHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

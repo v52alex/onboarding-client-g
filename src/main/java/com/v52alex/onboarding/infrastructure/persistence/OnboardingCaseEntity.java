@@ -11,6 +11,10 @@ import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Entity
 @Table(name = "onboarding_case")
 class OnboardingCaseEntity {

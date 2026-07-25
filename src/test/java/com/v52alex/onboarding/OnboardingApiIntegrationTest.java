@@ -12,6 +12,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @SpringBootTest
 @AutoConfigureMockMvc
 class OnboardingApiIntegrationTest {

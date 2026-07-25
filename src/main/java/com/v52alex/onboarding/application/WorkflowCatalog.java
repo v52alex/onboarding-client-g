@@ -10,6 +10,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Component
 public class WorkflowCatalog {
 

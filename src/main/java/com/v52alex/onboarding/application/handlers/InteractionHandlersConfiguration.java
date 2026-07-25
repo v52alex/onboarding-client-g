@@ -4,6 +4,10 @@ import com.v52alex.onboarding.application.InteractionActionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Configuration
 public class InteractionHandlersConfiguration {
 

@@ -17,6 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @RestController
 @RequestMapping("/api/v1/onboarding-cases")
 public class OnboardingController {

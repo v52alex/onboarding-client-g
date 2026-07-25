@@ -12,6 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @SpringBootTest
 class OnboardingFlowIntegrationTest {
 

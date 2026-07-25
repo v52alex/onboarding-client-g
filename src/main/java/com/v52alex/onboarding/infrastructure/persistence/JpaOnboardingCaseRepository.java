@@ -6,6 +6,10 @@ import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Repository;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Repository
 class JpaOnboardingCaseRepository implements OnboardingCaseRepository {
 

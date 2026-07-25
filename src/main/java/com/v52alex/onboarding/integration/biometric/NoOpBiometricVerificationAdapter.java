@@ -5,6 +5,10 @@ import java.util.UUID;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Component
 @ConditionalOnProperty(
     name = "onboarding.integrations.biometric.provider",

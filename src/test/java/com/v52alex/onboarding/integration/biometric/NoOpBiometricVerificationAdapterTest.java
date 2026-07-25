@@ -6,6 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 class NoOpBiometricVerificationAdapterTest {
 
     @Test

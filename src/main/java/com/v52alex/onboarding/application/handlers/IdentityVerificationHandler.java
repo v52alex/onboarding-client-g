@@ -8,6 +8,10 @@ import com.v52alex.onboarding.integration.biometric.BiometricVerificationPort;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
 @Component
 public class IdentityVerificationHandler implements InteractionActionHandler {
 

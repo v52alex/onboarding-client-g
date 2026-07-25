@@ -8,6 +8,11 @@ import com.v52alex.onboarding.application.ActionOutcome;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 class JsonSectionActionHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

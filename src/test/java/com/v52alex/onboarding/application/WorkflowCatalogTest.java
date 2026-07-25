@@ -7,6 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 class WorkflowCatalogTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();

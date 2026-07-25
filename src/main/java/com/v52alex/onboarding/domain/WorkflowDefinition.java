@@ -3,6 +3,11 @@ package com.v52alex.onboarding.domain;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 public record WorkflowDefinition(
     String key,
     int version,

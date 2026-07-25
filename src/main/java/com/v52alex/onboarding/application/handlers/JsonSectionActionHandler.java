@@ -6,6 +6,11 @@ import com.v52alex.onboarding.application.ActionOutcome;
 import com.v52alex.onboarding.application.InteractionActionHandler;
 import java.util.UUID;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 public class JsonSectionActionHandler implements InteractionActionHandler {
 
     private final String action;

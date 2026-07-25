@@ -17,6 +17,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
 
+/**
+ * @author Washington Chavez Pluas
+ * @since 2026-07-25
+ */
+
 class OnboardingOrchestratorTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
