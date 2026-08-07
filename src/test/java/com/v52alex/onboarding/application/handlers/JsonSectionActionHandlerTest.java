@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.v52alex.onboarding.application.ActionOutcome;
 import java.util.UUID;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -20,7 +21,8 @@ class JsonSectionActionHandlerTest {
     @Test
     void storesPayloadUnderItsConfiguredSectionWithoutRemovingExistingData() {
         JsonSectionActionHandler handler =
-            new JsonSectionActionHandler("submit-address", "address");
+            new JsonSectionActionHandler("submit-address", "address",
+                List.of("city"), List.of(), List.of());
         ObjectNode current = objectMapper.createObjectNode().put("existing", true);
         ObjectNode payload = objectMapper.createObjectNode().put("city", "San Salvador");
 
@@ -31,4 +33,3 @@ class JsonSectionActionHandlerTest {
         assertThat(result.updatedData().at("/address/city").asText()).isEqualTo("San Salvador");
     }
 }
-

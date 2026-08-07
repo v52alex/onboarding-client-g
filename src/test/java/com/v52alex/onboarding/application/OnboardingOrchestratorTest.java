@@ -9,6 +9,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.v52alex.onboarding.domain.OnboardingCase;
 import com.v52alex.onboarding.domain.OnboardingCaseRepository;
 import com.v52alex.onboarding.domain.OnboardingStatus;
+import com.v52alex.onboarding.domain.OnboardingOperations;
+import com.v52alex.onboarding.domain.OperationalRecords.CachedAction;
+import com.v52alex.onboarding.domain.OperationalRecords.CaseEvent;
+import com.v52alex.onboarding.domain.OperationalRecords.Consent;
+import com.v52alex.onboarding.domain.OperationalRecords.Document;
+import com.v52alex.onboarding.domain.OperationalRecords.FileSet;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -54,6 +61,7 @@ class OnboardingOrchestratorTest {
         catalog.load();
         orchestrator = new OnboardingOrchestrator(
             new InMemoryRepository(),
+            new InMemoryOperations(),
             catalog,
             objectMapper,
             java.util.List.of(new TestHandler())
@@ -151,5 +159,61 @@ class OnboardingOrchestratorTest {
             return Optional.ofNullable(cases.get(id));
         }
     }
-}
 
+    private static final class InMemoryOperations implements OnboardingOperations {
+        private final Map<String, CachedAction> cached = new HashMap<>();
+
+        @Override
+        public void recordEvent(CaseEvent event, String outboxPayload) {
+        }
+
+        @Override
+        public void recordConsent(Consent consent) {
+        }
+
+        @Override
+        public List<CaseEvent> findEvents(UUID caseId) {
+            return List.of();
+        }
+
+        @Override
+        public List<Consent> findConsents(UUID caseId) {
+            return List.of();
+        }
+
+        @Override
+        public Optional<CachedAction> findCachedAction(UUID caseId, String action, String idempotencyKey) {
+            return Optional.ofNullable(cached.get(caseId + action + idempotencyKey));
+        }
+
+        @Override
+        public void saveCachedAction(UUID caseId, String action, String idempotencyKey, CachedAction value) {
+            cached.put(caseId + action + idempotencyKey, value);
+        }
+
+        @Override
+        public FileSet createFileSet(FileSet fileSet) {
+            return fileSet;
+        }
+
+        @Override
+        public List<FileSet> findFileSets(UUID caseId) {
+            return List.of();
+        }
+
+        @Override
+        public Optional<FileSet> findFileSet(UUID fileSetId) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Document addDocument(Document document) {
+            return document;
+        }
+
+        @Override
+        public List<Document> findDocuments(UUID fileSetId) {
+            return List.of();
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "572f1c4c-cd35-4c2b-8da4-a9f3c157ea10",
+  "name": "Open Onboarding - windows-docker tunnels",
+  "values": [
+    {"key": "baseUrl", "value": "http://localhost:8080", "enabled": true},
+    {"key": "contentBaseUrl", "value": "http://localhost:8084", "enabled": true},
+    {"key": "minioBaseUrl", "value": "http://localhost:9000", "enabled": true}
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_using": "Codex"
+}

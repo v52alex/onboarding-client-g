@@ -1,6 +1,7 @@
 package com.v52alex.onboarding.api;
 
 import java.util.UUID;
+import java.util.Map;
 
 /**
  * @author Washington Chavez Pluas
@@ -12,7 +13,7 @@ public record InteractionResponse(
     String step,
     String action,
     boolean terminal,
-    String status
+    String status,
+    Map<String, String> metadata
 ) {
 }
-

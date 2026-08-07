@@ -1,252 +1,323 @@
 {
   "info": {
     "_postman_id": "26ac214b-4492-4f66-972d-3ebfa9460fa5",
-    "name": "Onboarding Client G",
-    "description": "Colección para ejecutar y verificar el flujo completo del orquestador JSON. Ejecute las solicitudes en el orden definido.",
+    "name": "Onboarding Client G - E2E Scenarios",
+    "description": "Pruebas de onboarding, content-service y MinIO. Ejecute cada carpeta en orden. Para el upload seleccione manualmente un PDF en el campo file.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "baseUrl",
-      "value": "http://localhost:8080"
-    },
-    {
-      "key": "caseId",
-      "value": ""
-    }
+    {"key": "baseUrl", "value": "http://localhost:8080"},
+    {"key": "contentBaseUrl", "value": "http://localhost:8084"},
+    {"key": "minioBaseUrl", "value": "http://localhost:9000"},
+    {"key": "successCaseId", "value": ""},
+    {"key": "successFileSetId", "value": ""},
+    {"key": "successDocumentId", "value": ""},
+    {"key": "invalidCaseId", "value": ""},
+    {"key": "originalCaseId", "value": ""},
+    {"key": "foreignCaseId", "value": ""}
   ],
   "item": [
     {
-      "name": "Health",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/actuator/health"
-      },
-      "event": [
+      "name": "00 - Health",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Service is healthy', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().status).to.eql('UP');",
-              "});"
-            ]
-          }
+          "name": "Onboarding health",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/actuator/health"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Onboarding is UP', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('UP'); });"
+          ]}}]
+        },
+        {
+          "name": "Content service health",
+          "request": {"method": "GET", "header": [], "url": "{{contentBaseUrl}}/actuator/health"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Content service is UP', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('UP'); });"
+          ]}}]
+        },
+        {
+          "name": "MinIO health",
+          "request": {"method": "GET", "header": [], "url": "{{minioBaseUrl}}/minio/health/live"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('MinIO is live', () => pm.response.to.have.status(200));"
+          ]}}]
         }
       ]
     },
     {
-      "name": "01 - Start onboarding",
-      "request": {
-        "method": "POST",
-        "header": [
-          {
-            "key": "Content-Type",
-            "value": "application/json"
-          }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"workflowKey\": \"onboarding\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases"
-      },
-      "event": [
+      "name": "01 - Successful flow",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Case is created', function () {",
-              "  pm.response.to.have.status(201);",
-              "  const body = pm.response.json();",
-              "  pm.expect(body.currentStep).to.eql('product-selection');",
-              "  pm.collectionVariables.set('caseId', body.id);",
-              "});"
-            ]
-          }
+          "name": "01.01 Start onboarding",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"workflowKey\": \"onboarding\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Case starts at product selection', () => {",
+            "  pm.response.to.have.status(201); const body = pm.response.json();",
+            "  pm.expect(body.currentStep).to.eql('product-selection'); pm.expect(body.version).to.eql(0);",
+            "  pm.collectionVariables.set('successCaseId', body.id);",
+            "});"
+          ]}}]
+        },
+        {
+          "name": "01.02 Select products",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-01"},
+              {"key": "X-Actor-Id", "value": "postman-success"},
+              {"key": "X-Correlation-Id", "value": "postman-{{successCaseId}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\n  \"productIds\": [\"checking-account\", \"debit-card\"]\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/select-products"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Products are persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('terms-and-conditions'); pm.expect(b.data.productSelection.productIds).to.have.length(2); });"
+          ]}}]
+        },
+        {
+          "name": "01.03 Accept terms",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-02"},
+              {"key": "X-Actor-Id", "value": "postman-success"},
+              {"key": "X-Correlation-Id", "value": "postman-{{successCaseId}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\n  \"accepted\": true,\n  \"documentVersion\": \"terms-v1\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/accept-terms"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Terms are accepted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('personal-data'); pm.expect(b.data.consent.accepted).to.be.true; });"
+          ]}}]
+        },
+        {
+          "name": "01.04 Submit personal data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-03"},
+              {"key": "X-Actor-Id", "value": "postman-success"}
+            ],
+            "body": {"mode": "raw", "raw": "{\n  \"firstName\": \"Alexis\",\n  \"lastName\": \"Chavez\",\n  \"dateOfBirth\": \"1990-01-15\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/submit-personal-data"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Personal data is persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('kyc'); pm.expect(b.data.applicant.firstName).to.eql('Alexis'); });"
+          ]}}]
+        },
+        {
+          "name": "01.05 Submit KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-04"},
+              {"key": "X-Actor-Id", "value": "postman-success"}
+            ],
+            "body": {"mode": "raw", "raw": "{\n  \"documentType\": \"PASSPORT\",\n  \"documentNumber\": \"P-POSTMAN-001\",\n  \"issuingCountry\": \"SV\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/submit-kyc"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('KYC data is persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('address'); pm.expect(b.data.kyc.documentType).to.eql('PASSPORT'); });"
+          ]}}]
+        },
+        {
+          "name": "01.06 Create identity file set",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\n  \"name\": \"Identity documents\",\n  \"maxFiles\": 2,\n  \"allowedMediaTypes\": [\"application/pdf\"]\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/file-sets"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('File set is created', () => { pm.response.to.have.status(201); const b=pm.response.json(); pm.expect(b.caseId).to.eql(pm.collectionVariables.get('successCaseId')); pm.collectionVariables.set('successFileSetId', b.id); });"
+          ]}}]
+        },
+        {
+          "name": "01.07 Upload PDF through content-service",
+          "request": {
+            "description": "Antes de enviar, seleccione un PDF local en Body > form-data > file. Onboarding delega el binario a content-service/MinIO y registra el metadato local.",
+            "method": "POST",
+            "header": [{"key": "X-Actor-Id", "value": "postman-success"}],
+            "body": {"mode": "formdata", "formdata": [{"key": "file", "type": "file", "src": null}]},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/file-sets/{{successFileSetId}}/documents/upload"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Document is stored and available', () => { pm.response.to.have.status(201); const b=pm.response.json(); pm.expect(b.status).to.eql('AVAILABLE'); pm.expect(b.objectKey).to.match(/^content-service:/); pm.collectionVariables.set('successDocumentId', b.id); });"
+          ]}}]
+        },
+        {
+          "name": "01.08 Download stored PDF",
+          "request": {
+            "method": "GET", "header": [],
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/file-sets/{{successFileSetId}}/documents/{{successDocumentId}}/content"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Stored document can be downloaded', () => { pm.response.to.have.status(200); pm.expect(pm.response.headers.get('Content-Type')).to.include('application/pdf'); pm.expect(pm.response.stream.length).to.be.above(0); });"
+          ]}}]
+        },
+        {
+          "name": "01.09 Submit address",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-05"}],
+            "body": {"mode": "raw", "raw": "{\n  \"line1\": \"Calle Dummy 123\",\n  \"city\": \"San Salvador\",\n  \"country\": \"SV\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/submit-address"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Address is persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('contact-verification'); pm.expect(b.data.address.city).to.eql('San Salvador'); });"
+          ]}}]
+        },
+        {
+          "name": "01.10 Verify contact",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-06"}],
+            "body": {"mode": "raw", "raw": "{\n  \"email\": \"alexis@example.test\",\n  \"phone\": \"+50370000000\",\n  \"verificationCode\": \"123456\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/verify-contact"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Contact is persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('identity-verification'); pm.expect(b.data.contactVerification.email).to.eql('alexis@example.test'); });"
+          ]}}]
+        },
+        {
+          "name": "01.11 Verify identity with dummy provider",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-07"}],
+            "body": {"mode": "raw", "raw": "{\n  \"documentReference\": \"postman-document-1\",\n  \"livenessReference\": \"postman-liveness-1\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/verify-identity"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Dummy biometric provider verifies identity', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('enrollment'); pm.expect(b.data.identityVerification.provider).to.eql('dummy'); pm.expect(b.data.identityVerification.status).to.eql('VERIFIED'); });"
+          ]}}]
+        },
+        {
+          "name": "01.12 Submit enrollment",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}, {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-08"}],
+            "body": {"mode": "raw", "raw": "{\n  \"accountType\": \"CHECKING\",\n  \"currency\": \"USD\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/submit-enrollment"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Enrollment is persisted', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('contract-acceptance'); pm.expect(b.data.enrollment.accountType).to.eql('CHECKING'); });"
+          ]}}]
+        },
+        {
+          "name": "01.13 Accept contract",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Idempotency-Key", "value": "success-{{successCaseId}}-09"},
+              {"key": "X-Actor-Id", "value": "postman-success"},
+              {"key": "X-Correlation-Id", "value": "postman-{{successCaseId}}"}
+            ],
+            "body": {"mode": "raw", "raw": "{\n  \"accepted\": true,\n  \"contractVersion\": \"contract-v1\"\n}"},
+            "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/actions/accept-contract"
+          },
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Onboarding completes at version 9', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.status).to.eql('COMPLETED'); pm.expect(b.currentStep).to.eql('completed'); pm.expect(b.version).to.eql(9); pm.expect(Object.keys(b.data)).to.have.length(10); });"
+          ]}}]
+        },
+        {
+          "name": "01.14 Verify audit events",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/events"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Every workflow step has an audit event', () => { pm.response.to.have.status(200); const events=pm.response.json(); pm.expect(events).to.have.length(10); pm.expect(events[0].eventType).to.eql('CASE_STARTED'); pm.expect(events[9].resultingStep).to.eql('completed'); });"
+          ]}}]
+        },
+        {
+          "name": "01.15 Verify consents",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{successCaseId}}/consents"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Terms and contract consents are stored', () => { pm.response.to.have.status(200); const c=pm.response.json(); pm.expect(c).to.have.length(2); pm.expect(c.every(x => x.accepted === true)).to.be.true; });"
+          ]}}]
         }
       ]
     },
     {
-      "name": "02 - Get current interaction",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/interaction"
-      },
-      "event": [
+      "name": "02 - Incomplete data and skipped step",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Product selection is the current interaction', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().action).to.eql('select-products');",
-              "});"
-            ]
-          }
+          "name": "02.01 Start invalid scenario",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"workflowKey\":\"onboarding\"}"}, "url": "{{baseUrl}}/api/v1/onboarding-cases"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Invalid scenario starts normally', () => { pm.response.to.have.status(201); const b=pm.response.json(); pm.collectionVariables.set('invalidCaseId', b.id); pm.expect(b.currentStep).to.eql('product-selection'); });"
+          ]}}]
+        },
+        {
+          "name": "02.02 Reject empty product list",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"productIds\":[]}"}, "url": "{{baseUrl}}/api/v1/onboarding-cases/{{invalidCaseId}}/actions/select-products"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Incomplete data returns 400', () => { pm.response.to.have.status(400); pm.expect(pm.response.json().detail).to.include('productIds'); });"
+          ]}}]
+        },
+        {
+          "name": "02.03 Reject skipped step",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"accepted\":true,\"documentVersion\":\"terms-v1\"}"}, "url": "{{baseUrl}}/api/v1/onboarding-cases/{{invalidCaseId}}/actions/accept-terms"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Skipped step returns 409', () => { pm.response.to.have.status(409); pm.expect(pm.response.json().detail).to.include('not allowed'); });"
+          ]}}]
+        },
+        {
+          "name": "02.04 Verify case was not modified",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{invalidCaseId}}"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Invalid requests do not advance the case', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('product-selection'); pm.expect(b.version).to.eql(0); pm.expect(b.data).to.eql({}); });"
+          ]}}]
+        },
+        {
+          "name": "02.05 Verify only CASE_STARTED exists",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{invalidCaseId}}/events"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Rejected operations create no action event', () => { pm.response.to.have.status(200); const e=pm.response.json(); pm.expect(e).to.have.length(1); pm.expect(e[0].eventType).to.eql('CASE_STARTED'); });"
+          ]}}]
         }
       ]
     },
     {
-      "name": "03 - Select products",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"productIds\": [\"checking-account\"]\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/select-products"
-      }
-    },
-    {
-      "name": "04 - Accept terms",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"accepted\": true,\n  \"documentVersion\": \"1.0\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/accept-terms"
-      }
-    },
-    {
-      "name": "05 - Submit personal data",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"firstName\": \"Alex\",\n  \"lastName\": \"Chavez\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"email\": \"alex@example.com\",\n  \"phoneNumber\": \"+50370000000\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-personal-data"
-      }
-    },
-    {
-      "name": "06 - Submit KYC",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"occupation\": \"Software Engineer\",\n  \"monthlyIncome\": 2500,\n  \"sourceOfFunds\": \"SALARY\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-kyc"
-      }
-    },
-    {
-      "name": "07 - Submit address",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"country\": \"SV\",\n  \"city\": \"San Salvador\",\n  \"line1\": \"Example address\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-address"
-      }
-    },
-    {
-      "name": "08 - Verify contact",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"channel\": \"EMAIL\",\n  \"verified\": true\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/verify-contact"
-      }
-    },
-    {
-      "name": "09 - Verify identity",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"documentType\": \"PASSPORT\",\n  \"documentReference\": \"local-test-reference\"\n}"
-        },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/verify-identity"
-      },
-      "event": [
+      "name": "03 - Different case ID",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('No external biometric provider routes to manual review', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().data.identityVerification.status).to.eql('MANUAL_REVIEW');",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "10 - Submit enrollment",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"username\": \"alex.chavez\",\n  \"termsAccepted\": true\n}"
+          "name": "03.01 Start original case",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"workflowKey\":\"onboarding\"}"}, "url": "{{baseUrl}}/api/v1/onboarding-cases"},
+          "event": [{"listen": "prerequest", "script": {"exec": [
+            "pm.collectionVariables.set('foreignCaseId', pm.variables.replaceIn('{{$guid}}'));"
+          ]}}, {"listen": "test", "script": {"exec": [
+            "pm.test('Original case is created', () => { pm.response.to.have.status(201); const b=pm.response.json(); pm.collectionVariables.set('originalCaseId', b.id); pm.expect(b.id).to.not.eql(pm.collectionVariables.get('foreignCaseId')); });"
+          ]}}]
         },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/submit-enrollment"
-      }
-    },
-    {
-      "name": "11 - Accept contract",
-      "request": {
-        "method": "POST",
-        "header": [{"key": "Content-Type", "value": "application/json"}],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"accepted\": true,\n  \"contractVersion\": \"1.0\"\n}"
+        {
+          "name": "03.02 Reject action with foreign ID",
+          "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\"productIds\":[\"checking-account\"]}"}, "url": "{{baseUrl}}/api/v1/onboarding-cases/{{foreignCaseId}}/actions/select-products"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Unknown case ID returns 404', () => pm.response.to.have.status(404));"
+          ]}}]
         },
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}/actions/accept-contract"
-      },
-      "event": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Onboarding is completed', function () {",
-              "  pm.response.to.have.status(200);",
-              "  const body = pm.response.json();",
-              "  pm.expect(body.status).to.eql('COMPLETED');",
-              "  pm.expect(body.currentStep).to.eql('completed');",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "name": "12 - Get completed case",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": "{{baseUrl}}/api/v1/onboarding-cases/{{caseId}}"
-      },
-      "event": [
+          "name": "03.03 Verify original case was not modified",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{originalCaseId}}"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Original flow remains unchanged', () => { pm.response.to.have.status(200); const b=pm.response.json(); pm.expect(b.currentStep).to.eql('product-selection'); pm.expect(b.version).to.eql(0); pm.expect(b.data).to.eql({}); });"
+          ]}}]
+        },
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test('Persisted case remains completed', function () {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
-              "});"
-            ]
-          }
+          "name": "03.04 Verify original audit history",
+          "request": {"method": "GET", "header": [], "url": "{{baseUrl}}/api/v1/onboarding-cases/{{originalCaseId}}/events"},
+          "event": [{"listen": "test", "script": {"exec": [
+            "pm.test('Foreign ID creates no event on original case', () => { pm.response.to.have.status(200); const e=pm.response.json(); pm.expect(e).to.have.length(1); pm.expect(e[0].eventType).to.eql('CASE_STARTED'); });"
+          ]}}]
         }
       ]
     }
   ]
 }
-

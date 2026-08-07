@@ -10,6 +10,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.Instant;
 import java.util.UUID;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * @author Washington Chavez Pluas
@@ -20,6 +22,8 @@ import java.util.UUID;
 class OnboardingCaseEntity {
 
     @Id
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(length = 36)
     UUID id;
 
     @Column(nullable = false, length = 100)
@@ -47,4 +51,3 @@ class OnboardingCaseEntity {
     protected OnboardingCaseEntity() {
     }
 }
-

@@ -32,7 +32,9 @@ class IdentityVerificationHandlerTest {
         BiometricVerificationPort port = (caseId, identityData) ->
             new BiometricVerificationPort.VerificationResult("test-provider", status, "ref-123");
         IdentityVerificationHandler handler = new IdentityVerificationHandler(port);
-        JsonNode payload = objectMapper.createObjectNode().put("documentReference", "doc-1");
+        JsonNode payload = objectMapper.createObjectNode()
+            .put("documentReference", "doc-1")
+            .put("livenessReference", "liveness-1");
 
         ActionOutcome result = handler.handle(
             UUID.randomUUID(),
@@ -47,4 +49,3 @@ class IdentityVerificationHandlerTest {
             .isEqualTo("ref-123");
     }
 }
-

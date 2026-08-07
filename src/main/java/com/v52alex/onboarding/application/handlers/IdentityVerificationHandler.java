@@ -6,6 +6,7 @@ import com.v52alex.onboarding.application.ActionOutcome;
 import com.v52alex.onboarding.application.InteractionActionHandler;
 import com.v52alex.onboarding.integration.biometric.BiometricVerificationPort;
 import java.util.UUID;
+import java.util.List;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,6 +29,8 @@ public class IdentityVerificationHandler implements InteractionActionHandler {
 
     @Override
     public ActionOutcome handle(UUID caseId, ObjectNode currentData, JsonNode payload) {
+        ActionPayloadValidator.validate(payload,
+            List.of("documentReference", "livenessReference"), List.of(), List.of());
         BiometricVerificationPort.VerificationResult result =
             biometricVerification.verify(caseId, payload);
         currentData.set("identity", payload.deepCopy());
@@ -44,4 +47,3 @@ public class IdentityVerificationHandler implements InteractionActionHandler {
         return new ActionOutcome(outcome, currentData);
     }
 }
-

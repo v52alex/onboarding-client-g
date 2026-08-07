@@ -25,8 +25,14 @@ public record WorkflowDefinition(
         String name,
         String action,
         boolean terminal,
-        Map<String, String> transitions
+        Map<String, String> transitions,
+        Map<String, String> metadata
     ) {
+        public StepDefinition {
+            transitions = Map.copyOf(transitions);
+            metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
+        }
+
         public String nextStep(String outcome) {
             String target = transitions.get(outcome);
             if (target == null) {
@@ -37,4 +43,3 @@ public record WorkflowDefinition(
         }
     }
 }
-

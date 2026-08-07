@@ -28,5 +28,11 @@ server:
 onboarding:
   integrations:
     biometric:
-      provider: none
-
+      provider: ${BIOMETRIC_PROVIDER:none}
+    kyc:
+      provider: ${KYC_PROVIDER:dummy}
+    otp:
+      provider: ${OTP_PROVIDER:dummy}
+    content:
+      base-url: ${CONTENT_SERVICE_URL:http://localhost:8084}
+      internal-token: ${CONTENT_INTERNAL_TOKEN:}

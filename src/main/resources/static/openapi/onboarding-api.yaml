@@ -63,6 +63,9 @@ paths:
           required: true
           schema:
             type: string
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ActorId'
+        - $ref: '#/components/parameters/CorrelationId'
       requestBody:
         required: true
         content:
@@ -81,6 +84,103 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           description: Action is not valid for the current step
+  /api/v1/onboarding-cases/{caseId}/events:
+    get:
+      operationId: listCaseEvents
+      summary: List the immutable transition history of a case
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Ordered case events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CaseEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/onboarding-cases/{caseId}/consents:
+    get:
+      operationId: listCaseConsents
+      summary: List the consent evidence registered for a case
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Case consents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Consent'
+  /api/v1/onboarding-cases/{caseId}/file-sets:
+    get:
+      operationId: listFileSets
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: Case file sets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FileSet'
+    post:
+      operationId: createFileSet
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateFileSetRequest'
+      responses:
+        '201':
+          description: File set created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileSet'
+  /api/v1/onboarding-cases/{caseId}/file-sets/{fileSetId}/documents:
+    get:
+      operationId: listDocuments
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/FileSetId'
+      responses:
+        '200':
+          description: File metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+    post:
+      operationId: registerDocument
+      summary: Register metadata for a binary stored outside the database
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/FileSetId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterDocumentRequest'
+      responses:
+        '201':
+          description: Document metadata registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
 components:
   parameters:
     CaseId:
@@ -90,6 +190,34 @@ components:
       schema:
         type: string
         format: uuid
+    FileSetId:
+      name: fileSetId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 150
+    ActorId:
+      name: X-Actor-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 150
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 100
   schemas:
     StartCaseRequest:
       type: object
@@ -126,7 +254,7 @@ components:
           format: date-time
     InteractionResponse:
       type: object
-      required: [caseId, step, terminal, status]
+      required: [caseId, step, terminal, status, metadata]
       properties:
         caseId:
           type: string
@@ -136,13 +264,95 @@ components:
         action:
           type: string
           nullable: true
+          enum:
+            - select-products
+            - accept-terms
+            - submit-personal-data
+            - submit-kyc
+            - submit-address
+            - verify-contact
+            - verify-identity
+            - submit-enrollment
+            - accept-contract
         terminal:
           type: boolean
         status:
           type: string
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+    CaseEvent:
+      type: object
+      required: [id, caseId, sequence, eventType, resultingStep, metadata, occurredAt]
+      properties:
+        id: {type: string, format: uuid}
+        caseId: {type: string, format: uuid}
+        sequence: {type: integer, format: int64}
+        eventType: {type: string}
+        action: {type: string, nullable: true}
+        previousStep: {type: string, nullable: true}
+        resultingStep: {type: string}
+        outcome: {type: string, nullable: true}
+        actorId: {type: string, nullable: true}
+        correlationId: {type: string, nullable: true}
+        metadata: {type: string}
+        occurredAt: {type: string, format: date-time}
+    Consent:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        caseId: {type: string, format: uuid}
+        type: {type: string}
+        documentVersion: {type: string}
+        accepted: {type: boolean}
+        actorId: {type: string, nullable: true}
+        correlationId: {type: string, nullable: true}
+        evidence: {type: string}
+        acceptedAt: {type: string, format: date-time}
+    CreateFileSetRequest:
+      type: object
+      required: [name, maxFiles, allowedMediaTypes]
+      properties:
+        name: {type: string, maxLength: 120}
+        maxFiles: {type: integer, minimum: 1}
+        allowedMediaTypes:
+          type: array
+          minItems: 1
+          maxItems: 3
+          items: {type: string}
+    FileSet:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        caseId: {type: string, format: uuid}
+        name: {type: string}
+        maxFiles: {type: integer}
+        allowedMediaTypes: {type: string}
+        createdAt: {type: string, format: date-time}
+    RegisterDocumentRequest:
+      type: object
+      required: [objectKey, originalFileName, mimeType, sizeBytes, checksumSha256]
+      properties:
+        objectKey: {type: string, maxLength: 500}
+        originalFileName: {type: string, maxLength: 255}
+        mimeType: {type: string, maxLength: 150}
+        sizeBytes: {type: integer, format: int64, minimum: 1}
+        checksumSha256: {type: string, pattern: '^[a-fA-F0-9]{64}$'}
+    Document:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        fileSetId: {type: string, format: uuid}
+        objectKey: {type: string}
+        originalFileName: {type: string}
+        mimeType: {type: string}
+        sizeBytes: {type: integer, format: int64}
+        checksumSha256: {type: string}
+        status: {type: string, enum: [AVAILABLE]}
+        createdAt: {type: string, format: date-time}
   responses:
     BadRequest:
       description: Invalid request
     NotFound:
       description: Case not found
-

@@ -13,7 +13,8 @@
       "name": "terms-and-conditions",
       "action": "accept-terms",
       "terminal": false,
-      "transitions": { "success": "personal-data" }
+      "transitions": { "success": "personal-data", "rejected": "declined" },
+      "metadata": { "documentVersion": "terms-v1" }
     },
     {
       "name": "personal-data",
@@ -75,4 +76,3 @@
     }
   ]
 }
-

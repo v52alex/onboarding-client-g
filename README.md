@@ -9,7 +9,12 @@ Onboarding orchestrator driven by JSON interactions.
 - API-first design with a versioned OpenAPI contract.
 - Explicit workflow in `src/main/resources/interactions/onboarding.json`.
 - Persistent state using JPA, Flyway, and optimistic locking.
-- H2 for development and PostgreSQL through the `postgres` profile.
+- Immutable transition history with actor and correlation metadata.
+- Idempotent action execution through the `Idempotency-Key` header.
+- Versioned consent evidence and a transactional outbox.
+- Document filesets and metadata; binary content remains in external object storage.
+- H2 for development, MySQL through the `mysql` profile, and PostgreSQL through
+  the `postgres` profile.
 - External integrations isolated behind ports and adapters.
 
 A generic BPMN engine was intentionally not implemented. The service includes
@@ -84,6 +89,35 @@ mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 Credentials must never be committed. In production, inject them through a
 secrets manager.
 
+## Shared MySQL Database
+
+The `mysql` profile connects to the shared MySQL 8.4 database defined at
+`../../../docker-compose/windows-docker/docker-compose-database-mysql.yml`.
+Its defaults match the Compose configuration: database `app_db`, user
+`app_user`, host `localhost`, and port `3306`.
+
+```bash
+set -a
+source ../../.env
+set +a
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+```
+
+Override `DB_URL` or `DB_USERNAME` when the database uses values other than the
+Compose defaults. Flyway creates the `onboarding_case` table on the first
+connection and Hibernate validates the resulting schema.
+
+The remote `windows-docker` Compose service publishes MySQL only on the remote
+loopback interface (`127.0.0.1:3306`). To run this application on the local Mac,
+open an SSH tunnel in a separate terminal before starting it:
+
+```bash
+ssh -N -L 3306:127.0.0.1:3306 alexi@10.75.104.133
+```
+
+The shared `Project/.env` file is ignored by Git and must have restrictive file
+permissions. Do not commit the database password or place it directly in YAML.
+
 ## Integrate a Biometric Provider
 
 The application depends on `BiometricVerificationPort`, not on a specific SDK.
@@ -103,16 +137,36 @@ onboarding flow to be tested without simulating biometric approval.
 
 - OpenAPI: `src/main/resources/static/openapi/onboarding-api.yaml`
 - Postman: `postman/collection.json`
+- Postman environment: `postman/windows-docker.environment.json`
 - Test report: `docs/test-report.md`
 - Tests: `mvn test`
 
-The Postman collection automatically stores the `caseId` and can be executed
-sequentially to run through the complete onboarding flow.
+The Postman collection contains health checks and three independent scenarios:
+successful completion, incomplete/skipped input, and a foreign case ID. Import
+the windows-docker environment when using SSH tunnels, run each folder in order,
+and select a local PDF manually in request `01.07` before sending it. Scenario
+variables, case IDs, file-set IDs, and document IDs are stored automatically.
+
+## Operational Persistence
+
+Flyway V2 adds `onboarding_case_event`, `onboarding_consent`,
+`onboarding_idempotency_record`, `onboarding_outbox_event`, `document_file_set`,
+and `document_file`. Case updates, audit events, consent evidence, idempotency
+results, and outbox events participate in the same database transaction.
+
+Clients should send a unique `Idempotency-Key` for every action with side
+effects. `X-Actor-Id` and `X-Correlation-Id` are recorded in the immutable event
+history when present.
+
+The document API registers metadata and an `objectKey`; it intentionally does
+not store binary content in MySQL. The object must first be uploaded through the
+selected storage adapter (for example S3 or MinIO), and its SHA-256 checksum must
+be registered with the metadata.
 
 ## Planned Improvements
 
 - Authentication and authorization based on the actual consumer.
 - Action-specific DTOs and validation.
-- Transition auditing without storing sensitive data.
-- Idempotency keys for actions with external side effects.
+- Outbox publisher with retries, backoff, and dead-letter handling.
+- S3/MinIO document-content adapter and signed upload URLs.
 - Duration and abandonment metrics for each step.
