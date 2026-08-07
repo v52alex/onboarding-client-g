@@ -11,6 +11,12 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OIDC_ISSUER_URI:http://localhost:8180/realms/open-onboarding}
+          jwk-set-uri: ${OIDC_JWK_SET_URI:http://localhost:8180/realms/open-onboarding/protocol/openid-connect/certs}
 
 management:
   endpoints:

@@ -8,6 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.v52alex.onboarding.domain.OnboardingCase;
 import com.v52alex.onboarding.domain.OnboardingCaseRepository;
+import com.v52alex.onboarding.domain.CaseManagementRepository;
+import com.v52alex.onboarding.domain.CaseManagementRecords.CasePage;
+import com.v52alex.onboarding.domain.CaseManagementRecords.Review;
+import com.v52alex.onboarding.domain.CaseManagementRecords.ReviewEvent;
+import com.v52alex.onboarding.domain.CaseManagementRecords.ReviewStatus;
 import com.v52alex.onboarding.domain.OnboardingStatus;
 import com.v52alex.onboarding.domain.OnboardingOperations;
 import com.v52alex.onboarding.domain.OperationalRecords.CachedAction;
@@ -62,10 +67,25 @@ class OnboardingOrchestratorTest {
         orchestrator = new OnboardingOrchestrator(
             new InMemoryRepository(),
             new InMemoryOperations(),
+            new InMemoryCaseManagement(),
             catalog,
             objectMapper,
             java.util.List.of(new TestHandler())
         );
+    }
+
+    private static final class InMemoryCaseManagement implements CaseManagementRepository {
+        @Override public void ensurePendingReview(UUID caseId) { }
+        @Override public CasePage search(ReviewStatus status, String assignedTo, int page, int size) {
+            return new CasePage(List.of(), page, size, 0, 0);
+        }
+        @Override public Optional<Review> findReview(UUID caseId) { return Optional.empty(); }
+        @Override public Review assign(UUID caseId, String assignedTo, String actorId) { throw unsupported(); }
+        @Override public Review decide(UUID caseId, ReviewStatus decision, String reason, String actorId) {
+            throw unsupported();
+        }
+        @Override public List<ReviewEvent> findEvents(UUID caseId) { return List.of(); }
+        private UnsupportedOperationException unsupported() { return new UnsupportedOperationException(); }
     }
 
     @Test

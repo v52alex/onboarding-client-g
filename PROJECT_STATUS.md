@@ -7,18 +7,19 @@ project_workflow:
   methodology: scrum
   owner: Alexis
   last_reviewed: 2026-08-07
-  rationale: "El orquestador está en validación de contrato e integración end-to-end con us-onboarding-ang y content-service."
+  rationale: "Sprint 4 incorpora gestión operativa protegida por Keycloak sobre los casos completados."
 ```
 
 ## Sprint actual
 
-- Sprint: 3 — KYC documental e integración de contenido.
-- El contrato KYC exige una referencia documental persistida.
-- La referencia debe pertenecer al caso, estar disponible y apuntar a Content Service.
-- El contrato OpenAPI documenta la carga multipart usada por el frontend.
-- La suite Java pasó 32 pruebas y el smoke remoto confirmó rechazo sin documento
-  (`400`), carga `AVAILABLE` y evaluación KYC `APPROVED` con documento del caso.
-- Cambio previo al cierre: workflow v2 añade `request-otp` y reemplaza la captura
-  directa de contacto por un desafío OTP dummy ligado al caso.
-- La nueva imagen fue desplegada en `windows-docker`; el smoke remoto pasó
-  destino inválido `400`, código incorrecto `400` y código `123456` `VERIFIED`.
+- Sprint: 4 — Bandeja, asignación y decisión operativa.
+- Flyway V3 persiste revisión y eventos de auditoría, y migra casos completados
+  existentes a `PENDING`.
+- Los endpoints `/api/v1/case-management/**` exigen el rol Keycloak
+  `case-manager`; el onboarding del prospecto permanece público.
+- La API entrega búsqueda paginada, expediente agregado, autoasignación y
+  aprobación/rechazo con reglas de transición.
+- La suite Java pasó 35 pruebas; incluye `401`, `403`, ciclo operativo y motivo
+  obligatorio para rechazo.
+- La imagen fue empaquetada, reconstruida y desplegada en `windows-docker`;
+  Flyway confirmó la versión 3 sobre MySQL 8.4.

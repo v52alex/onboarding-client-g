@@ -4,6 +4,7 @@ import com.v52alex.onboarding.application.CaseNotFoundException;
 import com.v52alex.onboarding.application.InvalidTransitionException;
 import com.v52alex.onboarding.application.InvalidActionPayloadException;
 import com.v52alex.onboarding.application.DocumentValidationException;
+import com.v52alex.onboarding.application.InvalidReviewTransitionException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -29,6 +30,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(InvalidTransitionException.class)
     ProblemDetail conflict(InvalidTransitionException exception, HttpServletRequest request) {
+        return problem(HttpStatus.CONFLICT, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(InvalidReviewTransitionException.class)
+    ProblemDetail invalidReview(InvalidReviewTransitionException exception, HttpServletRequest request) {
         return problem(HttpStatus.CONFLICT, exception.getMessage(), request);
     }
 

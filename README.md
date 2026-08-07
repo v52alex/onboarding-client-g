@@ -75,6 +75,20 @@ Retrieve the current interaction:
 curl http://localhost:8080/api/v1/onboarding-cases/{caseId}/interaction
 ```
 
+## Case Management
+
+Completed onboarding cases enter an independent operational review queue with
+status `PENDING`. The Case Manager endpoints provide paginated search, aggregated
+case detail, self-assignment, documents, timeline, and audited approval or
+rejection. Rejection requires a reason and decisions are accepted only from the
+operator assigned to the case.
+
+All routes below `/api/v1/case-management` require a Keycloak bearer token with
+the realm role `case-manager`. Prospect onboarding routes remain public by product
+decision. Configure JWT validation with `OIDC_ISSUER_URI` and `OIDC_JWK_SET_URI`;
+the latter allows containers to obtain keys through the internal Keycloak route
+while validating the public token issuer.
+
 Execute its action:
 
 ```bash
@@ -165,6 +179,10 @@ Clients should send a unique `Idempotency-Key` for every action with side
 effects. `X-Actor-Id` and `X-Correlation-Id` are recorded in the immutable event
 history when present.
 
+Flyway V3 adds `onboarding_case_review` and `onboarding_case_review_event`.
+Existing completed cases are backfilled as `PENDING`, while newly completed cases
+enter the queue in the same onboarding transaction.
+
 The document API registers metadata and an `objectKey`; it intentionally does
 not store binary content in MySQL. The object must first be uploaded through the
 selected storage adapter (for example S3 or MinIO), and its SHA-256 checksum must
@@ -172,7 +190,7 @@ be registered with the metadata.
 
 ## Planned Improvements
 
-- Authentication and authorization based on the actual consumer.
+- Granular permissions for compliance officers and platform administrators.
 - Action-specific DTOs and validation.
 - Outbox publisher with retries, backoff, and dead-letter handling.
 - S3/MinIO document-content adapter and signed upload URLs.

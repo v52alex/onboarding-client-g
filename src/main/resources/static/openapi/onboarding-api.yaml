@@ -211,7 +211,74 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '404':
           $ref: '#/components/responses/NotFound'
+  /api/v1/case-management/cases:
+    get:
+      operationId: searchManagedCases
+      summary: Search the operational review queue
+      security: [{keycloak: []}]
+      parameters:
+        - {name: status, in: query, schema: {$ref: '#/components/schemas/ReviewStatus'}}
+        - {name: assignedTo, in: query, schema: {type: string, maxLength: 150}}
+        - {name: page, in: query, schema: {type: integer, minimum: 0, default: 0}}
+        - {name: size, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 20}}
+      responses:
+        '200':
+          description: Paginated operational queue
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedCasePage'}
+        '401': {description: Missing or invalid token}
+        '403': {description: The token does not contain the case-manager role}
+  /api/v1/case-management/cases/{caseId}:
+    get:
+      operationId: getManagedCase
+      security: [{keycloak: []}]
+      parameters: [{$ref: '#/components/parameters/CaseId'}]
+      responses:
+        '200':
+          description: Aggregated case detail
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedCaseDetail'}
+  /api/v1/case-management/cases/{caseId}/assignment:
+    post:
+      operationId: assignManagedCaseToCurrentOperator
+      security: [{keycloak: []}]
+      parameters: [{$ref: '#/components/parameters/CaseId'}]
+      responses:
+        '200':
+          description: Case assigned to the authenticated operator
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedCaseDetail'}
+        '409': {description: Case is already assigned or decided}
+  /api/v1/case-management/cases/{caseId}/decision:
+    post:
+      operationId: decideManagedCase
+      security: [{keycloak: []}]
+      parameters: [{$ref: '#/components/parameters/CaseId'}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: {type: string, enum: [APPROVED, REJECTED]}
+                reason: {type: string, maxLength: 500}
+      responses:
+        '200':
+          description: Audited decision
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedCaseDetail'}
+        '409': {description: Invalid assignment or rejection reason}
 components:
+  securitySchemes:
+    keycloak:
+      type: openIdConnect
+      openIdConnectUrl: http://localhost:8180/realms/open-onboarding/.well-known/openid-configuration
   parameters:
     CaseId:
       name: caseId
@@ -382,6 +449,51 @@ components:
         checksumSha256: {type: string}
         status: {type: string, enum: [AVAILABLE]}
         createdAt: {type: string, format: date-time}
+    ReviewStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+    CaseReview:
+      type: object
+      required: [caseId, status, createdAt, updatedAt]
+      properties:
+        caseId: {type: string, format: uuid}
+        status: {$ref: '#/components/schemas/ReviewStatus'}
+        assignedTo: {type: string, nullable: true}
+        decisionReason: {type: string, nullable: true}
+        decidedBy: {type: string, nullable: true}
+        decidedAt: {type: string, format: date-time, nullable: true}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ManagedCaseSummary:
+      type: object
+      required: [id, workflowKey, currentStep, onboardingStatus, reviewStatus, createdAt, updatedAt]
+      properties:
+        id: {type: string, format: uuid}
+        workflowKey: {type: string}
+        currentStep: {type: string}
+        onboardingStatus: {type: string, enum: [COMPLETED]}
+        reviewStatus: {$ref: '#/components/schemas/ReviewStatus'}
+        assignedTo: {type: string, nullable: true}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    ManagedCasePage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content: {type: array, items: {$ref: '#/components/schemas/ManagedCaseSummary'}}
+        page: {type: integer}
+        size: {type: integer}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
+    ManagedCaseDetail:
+      type: object
+      required: [onboardingCase, review, onboardingEvents, reviewEvents, fileSets]
+      properties:
+        onboardingCase: {$ref: '#/components/schemas/CaseResponse'}
+        review: {$ref: '#/components/schemas/CaseReview'}
+        onboardingEvents: {type: array, items: {$ref: '#/components/schemas/CaseEvent'}}
+        reviewEvents: {type: array, items: {type: object, additionalProperties: true}}
+        fileSets: {type: array, items: {type: object, additionalProperties: true}}
   responses:
     BadRequest:
       description: Invalid request

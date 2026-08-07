@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.v52alex.onboarding.domain.OnboardingCase;
 import com.v52alex.onboarding.domain.OnboardingCaseRepository;
+import com.v52alex.onboarding.domain.CaseManagementRepository;
 import com.v52alex.onboarding.domain.OnboardingOperations;
 import com.v52alex.onboarding.domain.OnboardingStatus;
 import com.v52alex.onboarding.domain.OperationalRecords.CachedAction;
@@ -37,18 +38,21 @@ public class OnboardingOrchestrator {
     private final WorkflowCatalog catalog;
     private final ObjectMapper objectMapper;
     private final OnboardingOperations operations;
+    private final CaseManagementRepository caseManagement;
     private final Clock clock;
     private final Map<String, InteractionActionHandler> handlers;
 
     public OnboardingOrchestrator(
         OnboardingCaseRepository repository,
         OnboardingOperations operations,
+        CaseManagementRepository caseManagement,
         WorkflowCatalog catalog,
         ObjectMapper objectMapper,
         List<InteractionActionHandler> handlers
     ) {
         this.repository = repository;
         this.operations = operations;
+        this.caseManagement = caseManagement;
         this.catalog = catalog;
         this.objectMapper = objectMapper;
         this.clock = Clock.systemUTC();
@@ -137,6 +141,9 @@ public class OnboardingOrchestrator {
         recordEvent(saved, "ACTION_COMPLETED", action, current.currentStep(), nextStep,
             outcome.code(), context, now);
         recordConsentIfApplicable(saved, action, payload, context, now);
+        if (saved.status() == OnboardingStatus.COMPLETED) {
+            caseManagement.ensurePendingReview(saved.id());
+        }
         if (context.idempotencyKey() != null) {
             operations.saveCachedAction(caseId, action, context.idempotencyKey(),
                 new CachedAction(requestHash, saved));
