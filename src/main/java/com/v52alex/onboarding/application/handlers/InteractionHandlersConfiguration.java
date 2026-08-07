@@ -35,12 +35,6 @@ public class InteractionHandlersConfiguration {
     }
 
     @Bean
-    InteractionActionHandler verifyContactHandler() {
-        return handler("verify-contact", "contactVerification",
-            List.of("email", "phone", "verificationCode"), List.of(), List.of());
-    }
-
-    @Bean
     InteractionActionHandler submitEnrollmentHandler() {
         return handler("submit-enrollment", "enrollment",
             List.of("accountType", "currency"), List.of(), List.of());

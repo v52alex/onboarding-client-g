@@ -1,6 +1,6 @@
 {
   "key": "onboarding",
-  "version": 1,
+  "version": 2,
   "initialStep": "product-selection",
   "steps": [
     {
@@ -31,6 +31,12 @@
     {
       "name": "address",
       "action": "submit-address",
+      "terminal": false,
+      "transitions": { "success": "contact-challenge" }
+    },
+    {
+      "name": "contact-challenge",
+      "action": "request-otp",
       "terminal": false,
       "transitions": { "success": "contact-verification" }
     },

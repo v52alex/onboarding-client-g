@@ -181,6 +181,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Document'
+  /api/v1/onboarding-cases/{caseId}/file-sets/{fileSetId}/documents/upload:
+    post:
+      operationId: uploadDocument
+      summary: Upload a case document through Content Service
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/FileSetId'
+        - $ref: '#/components/parameters/ActorId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Document stored and registered in the onboarding case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   parameters:
     CaseId:
@@ -270,6 +300,7 @@ components:
             - submit-personal-data
             - submit-kyc
             - submit-address
+            - request-otp
             - verify-contact
             - verify-identity
             - submit-enrollment

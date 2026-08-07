@@ -18,5 +18,7 @@ class DummyOtpVerificationAdapterTest {
             .isEqualTo(OtpVerificationPort.Status.VERIFIED);
         assertThat(adapter.verify(caseId, challengeId, "000000").status())
             .isEqualTo(OtpVerificationPort.Status.INVALID);
+        assertThat(adapter.verify(caseId, "dummy-otp-" + UUID.randomUUID(), "123456").status())
+            .isEqualTo(OtpVerificationPort.Status.INVALID);
     }
 }

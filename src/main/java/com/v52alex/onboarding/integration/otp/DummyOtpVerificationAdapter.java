@@ -17,7 +17,9 @@ public class DummyOtpVerificationAdapter implements OtpVerificationPort {
 
     @Override
     public Verification verify(UUID caseId, String challengeId, String code) {
-        Status status = VALID_CODE.equals(code) ? Status.VERIFIED : Status.INVALID;
+        String expectedChallenge = "dummy-otp-%s".formatted(caseId);
+        Status status = expectedChallenge.equals(challengeId) && VALID_CODE.equals(code)
+            ? Status.VERIFIED : Status.INVALID;
         return new Verification("dummy", status);
     }
 }

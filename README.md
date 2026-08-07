@@ -29,13 +29,20 @@ flowchart LR
     B --> C[Personal data]
     C --> D[KYC]
     D --> E[Address]
-    E --> F[Contact verification]
-    F --> G[Identity verification]
-    G -->|Verified or manual review| H[Enrollment]
-    G -->|Rejected| X[Declined]
-    H --> I[Contract acceptance]
-    I --> J[Completed]
+    E --> F[Request OTP by email or phone]
+    F --> G[Verify OTP]
+    G --> H[Identity verification]
+    H -->|Verified or manual review| I[Enrollment]
+    H -->|Rejected| X[Declined]
+    I --> J[Contract acceptance]
+    J --> K[Completed]
 ```
+
+The development profile uses a dummy OTP adapter. `request-otp` accepts an
+`EMAIL` or `PHONE` destination and `verify-contact` accepts the deterministic
+code `123456`. This adapter is not suitable for production because delivery,
+expiration, attempt limits, and abuse controls must be provided by a real OTP
+service.
 
 ## Run the Application
 

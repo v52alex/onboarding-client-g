@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.v52alex.onboarding.application.OnboardingOrchestrator;
+import com.v52alex.onboarding.application.DocumentService;
 import com.v52alex.onboarding.domain.OnboardingCase;
 import com.v52alex.onboarding.domain.OnboardingStatus;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,9 +27,19 @@ class OnboardingFlowIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private DocumentService documentService;
+
+    private UUID identityDocumentId;
+
     @Test
     void completesTheConfiguredOnboardingFlow() throws Exception {
         OnboardingCase onboardingCase = orchestrator.start("onboarding");
+        var fileSet = documentService.createFileSet(onboardingCase.id(), "Identity documents", 1,
+            List.of("application/pdf"));
+        identityDocumentId = documentService.register(onboardingCase.id(), fileSet.id(),
+            "content-service:" + UUID.randomUUID(), "identity.pdf", "application/pdf", 1024,
+            "a".repeat(64)).id();
 
         List<String> actions = List.of(
             "select-products",
@@ -35,6 +47,7 @@ class OnboardingFlowIntegrationTest {
             "submit-personal-data",
             "submit-kyc",
             "submit-address",
+            "request-otp",
             "verify-contact",
             "verify-identity",
             "submit-enrollment",
@@ -51,7 +64,8 @@ class OnboardingFlowIntegrationTest {
         assertThat(onboardingCase.version()).isEqualTo(actions.size());
         var storedData = objectMapper.readTree(onboardingCase.data());
         assertThat(List.of("productSelection", "consent", "applicant", "kyc", "address",
-            "contactVerification", "identity", "identityVerification", "enrollment", "contract"))
+            "contactChallenge", "contactVerification", "identity", "identityVerification",
+            "enrollment", "contract"))
             .allMatch(storedData::has);
     }
 
@@ -66,11 +80,13 @@ class OnboardingFlowIntegrationTest {
             case "submit-personal-data" -> payload.put("firstName", "Alexis")
                 .put("lastName", "Chavez").put("dateOfBirth", "1990-01-15");
             case "submit-kyc" -> payload.put("documentType", "PASSPORT")
-                .put("documentNumber", "P-DUMMY-001").put("issuingCountry", "SV");
+                .put("documentNumber", "P-DUMMY-001").put("issuingCountry", "SV")
+                .put("documentId", identityDocumentId.toString());
             case "submit-address" -> payload.put("line1", "Calle Dummy 123")
                 .put("city", "San Salvador").put("country", "SV");
-            case "verify-contact" -> payload.put("email", "alexis@example.test")
-                .put("phone", "+50370000000").put("verificationCode", "123456");
+            case "request-otp" -> payload.put("channel", "EMAIL")
+                .put("destination", "alexis@example.test");
+            case "verify-contact" -> payload.put("verificationCode", "123456");
             case "verify-identity" -> payload.put("documentReference", "document-dummy-1")
                 .put("livenessReference", "liveness-dummy-1");
             case "submit-enrollment" -> payload.put("accountType", "CHECKING")
