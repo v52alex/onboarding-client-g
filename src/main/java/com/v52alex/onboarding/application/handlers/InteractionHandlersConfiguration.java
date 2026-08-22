@@ -13,11 +13,6 @@ import java.util.List;
 public class InteractionHandlersConfiguration {
 
     @Bean
-    InteractionActionHandler selectProductsHandler() {
-        return handler("select-products", "productSelection", List.of(), List.of(), List.of("productIds"));
-    }
-
-    @Bean
     InteractionActionHandler acceptTermsHandler() {
         return new TermsDecisionHandler();
     }

@@ -3,6 +3,19 @@ info:
   title: Onboarding Orchestrator API
   version: 1.0.0
 paths:
+  /api/v1/onboarding-products:
+    get:
+      operationId: listOnboardingProducts
+      summary: List the products available before an onboarding case is created
+      responses:
+        '200':
+          description: Available product options
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OnboardingProduct'
   /api/v1/onboarding-cases:
     post:
       operationId: startOnboarding
@@ -349,6 +362,14 @@ components:
         updatedAt:
           type: string
           format: date-time
+    OnboardingProduct:
+      type: object
+      required: [id, code, name, description]
+      properties:
+        id: {type: string}
+        code: {type: string}
+        name: {type: string}
+        description: {type: string}
     InteractionResponse:
       type: object
       required: [caseId, step, terminal, status, metadata]

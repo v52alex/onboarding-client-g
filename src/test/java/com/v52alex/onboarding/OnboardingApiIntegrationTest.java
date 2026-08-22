@@ -49,6 +49,22 @@ class OnboardingApiIntegrationTest {
     }
 
     @Test
+    void listsAvailableProductsAndRejectsUnknownSelection() throws Exception {
+        mockMvc.perform(get("/api/v1/onboarding-products"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].id").value("checking-account"))
+            .andExpect(jsonPath("$[1].id").value("savings-account"));
+
+        String caseId = createCase();
+        mockMvc.perform(post("/api/v1/onboarding-cases/{caseId}/actions/select-products", caseId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productIds\":[\"unknown-product\"]}"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.detail").value("Product 'unknown-product' is not available"));
+    }
+
+    @Test
     void rejectsAnActionThatDoesNotMatchTheCurrentStep() throws Exception {
         String response = mockMvc.perform(post("/api/v1/onboarding-cases")
                 .contentType(MediaType.APPLICATION_JSON)
