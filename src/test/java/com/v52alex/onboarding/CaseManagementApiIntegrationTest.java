@@ -34,7 +34,8 @@ class CaseManagementApiIntegrationTest {
         jdbc.update("""
             insert into onboarding_case
                 (id, workflow_key, current_step, status, data, version, created_at, updated_at)
-            values (?, 'onboarding', 'completed', 'COMPLETED', '{}', 10, ?, ?)
+            values (?, 'onboarding', 'completed', 'COMPLETED',
+                    '{"productSelection":{"productIds":["checking-account"]}}', 10, ?, ?)
             """, caseId.toString(), Timestamp.from(now), Timestamp.from(now));
         jdbc.update("""
             insert into onboarding_case_review
@@ -59,7 +60,9 @@ class CaseManagementApiIntegrationTest {
                 .param("status", "PENDING")
                 .with(operator()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.content[?(@.id == '%s')]", caseId).exists());
+            .andExpect(jsonPath("$.content[?(@.id == '%s')]", caseId).exists())
+            .andExpect(jsonPath("$.content[?(@.id == '%s')].productIds[0]", caseId)
+                .value("checking-account"));
 
         mockMvc.perform(post("/api/v1/case-management/cases/{caseId}/assignment", caseId)
                 .with(operator()))

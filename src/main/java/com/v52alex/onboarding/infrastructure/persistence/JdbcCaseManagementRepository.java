@@ -1,5 +1,7 @@
 package com.v52alex.onboarding.infrastructure.persistence;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.v52alex.onboarding.domain.CaseManagementRecords.CasePage;
 import com.v52alex.onboarding.domain.CaseManagementRecords.CaseSummary;
 import com.v52alex.onboarding.domain.CaseManagementRecords.Review;
@@ -22,9 +24,11 @@ import org.springframework.stereotype.Repository;
 class JdbcCaseManagementRepository implements CaseManagementRepository {
 
     private final JdbcTemplate jdbc;
+    private final ObjectMapper objectMapper;
 
-    JdbcCaseManagementRepository(JdbcTemplate jdbc) {
+    JdbcCaseManagementRepository(JdbcTemplate jdbc, ObjectMapper objectMapper) {
         this.jdbc = jdbc;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -63,7 +67,7 @@ class JdbcCaseManagementRepository implements CaseManagementRepository {
         pageParameters.add(size);
         pageParameters.add(page * size);
         List<CaseSummary> content = jdbc.query("""
-                select c.id, c.workflow_key, c.current_step, c.status, r.review_status,
+                select c.id, c.workflow_key, c.current_step, c.status, c.data, r.review_status,
                        r.assigned_to, c.created_at, r.updated_at
                   from onboarding_case c
                   join onboarding_case_review r on r.case_id = c.id
@@ -139,9 +143,24 @@ class JdbcCaseManagementRepository implements CaseManagementRepository {
         return new CaseSummary(
             UUID.fromString(rs.getString("id")), rs.getString("workflow_key"),
             rs.getString("current_step"), OnboardingStatus.valueOf(rs.getString("status")),
-            ReviewStatus.valueOf(rs.getString("review_status")), rs.getString("assigned_to"),
+            productIds(rs.getString("data")), ReviewStatus.valueOf(rs.getString("review_status")),
+            rs.getString("assigned_to"),
             instant(rs, "created_at"), instant(rs, "updated_at")
         );
+    }
+
+    private List<String> productIds(String data) {
+        try {
+            JsonNode productIds = objectMapper.readTree(data).path("productSelection").path("productIds");
+            if (!productIds.isArray()) return List.of();
+            List<String> values = new ArrayList<>();
+            productIds.forEach(value -> {
+                if (value.isTextual() && !value.asText().isBlank()) values.add(value.asText());
+            });
+            return List.copyOf(values);
+        } catch (Exception ignored) {
+            return List.of();
+        }
     }
 
     private Review review(ResultSet rs, int row) throws SQLException {

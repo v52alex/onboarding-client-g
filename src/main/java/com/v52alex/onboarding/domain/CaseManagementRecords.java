@@ -33,7 +33,8 @@ public final class CaseManagementRecords {
 
     public record CaseSummary(
         UUID id, String workflowKey, String currentStep, OnboardingStatus onboardingStatus,
-        ReviewStatus reviewStatus, String assignedTo, Instant createdAt, Instant updatedAt
+        List<String> productIds, ReviewStatus reviewStatus, String assignedTo, Instant createdAt,
+        Instant updatedAt
     ) {
     }
 

@@ -466,12 +466,15 @@ components:
         updatedAt: {type: string, format: date-time}
     ManagedCaseSummary:
       type: object
-      required: [id, workflowKey, currentStep, onboardingStatus, reviewStatus, createdAt, updatedAt]
+      required: [id, workflowKey, currentStep, onboardingStatus, productIds, reviewStatus, createdAt, updatedAt]
       properties:
         id: {type: string, format: uuid}
         workflowKey: {type: string}
         currentStep: {type: string}
         onboardingStatus: {type: string, enum: [COMPLETED]}
+        productIds:
+          type: array
+          items: {type: string}
         reviewStatus: {$ref: '#/components/schemas/ReviewStatus'}
         assignedTo: {type: string, nullable: true}
         createdAt: {type: string, format: date-time}
