@@ -184,13 +184,22 @@ public class OnboardingOrchestrator {
             eventType, action, previousStep, resultingStep, outcome, context.actorId(),
             context.correlationId(), "{}", occurredAt);
         try {
-            operations.recordEvent(event, objectMapper.writeValueAsString(Map.of(
-                "caseId", onboardingCase.id(),
-                "workflowKey", onboardingCase.workflowKey(),
-                "eventType", eventType,
-                "step", resultingStep,
-                "status", onboardingCase.status().name(),
-                "version", onboardingCase.version()
+            operations.recordEvent(event, objectMapper.writeValueAsString(Map.ofEntries(
+                Map.entry("eventId", event.id()),
+                Map.entry("eventName", "onboarding.case-event.v1"),
+                Map.entry("eventType", eventType),
+                Map.entry("aggregateType", "ONBOARDING_CASE"),
+                Map.entry("aggregateId", onboardingCase.id()),
+                Map.entry("actorId", context.actorId() == null ? "" : context.actorId()),
+                Map.entry("correlationId", context.correlationId() == null ? "" : context.correlationId()),
+                Map.entry("occurredAt", occurredAt.toString()),
+                Map.entry("payload", Map.ofEntries(
+                    Map.entry("caseId", onboardingCase.id()),
+                    Map.entry("workflowKey", onboardingCase.workflowKey()),
+                    Map.entry("step", resultingStep),
+                    Map.entry("status", onboardingCase.status().name()),
+                    Map.entry("version", onboardingCase.version())
+                ))
             )));
         } catch (JsonProcessingException exception) {
             throw new IllegalStateException("Outbox event cannot be serialized", exception);

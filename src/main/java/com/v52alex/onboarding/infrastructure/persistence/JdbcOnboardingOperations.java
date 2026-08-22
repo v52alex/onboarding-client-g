@@ -39,10 +39,10 @@ class JdbcOnboardingOperations implements OnboardingOperations {
             event.correlationId(), event.metadata(), Timestamp.from(event.occurredAt()));
         jdbc.update("""
             insert into onboarding_outbox_event
-              (id, aggregate_id, event_type, payload, status, attempts, created_at)
-            values (?, ?, ?, ?, 'PENDING', 0, ?)
-            """, UUID.randomUUID().toString(), event.caseId().toString(), event.eventType(), outboxPayload,
-            Timestamp.from(event.occurredAt()));
+              (id, aggregate_id, event_type, payload, status, attempts, created_at, next_attempt_at)
+            values (?, ?, ?, ?, 'PENDING', 0, ?, ?)
+            """, event.id().toString(), event.caseId().toString(), event.eventType(), outboxPayload,
+            Timestamp.from(event.occurredAt()), Timestamp.from(event.occurredAt()));
     }
 
     @Override

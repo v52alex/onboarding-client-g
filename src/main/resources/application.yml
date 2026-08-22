@@ -11,6 +11,13 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:onboarding}
+    password: ${RABBITMQ_PASSWORD:onboarding}
+    publisher-confirm-type: correlated
+    publisher-returns: true
   security:
     oauth2:
       resourceserver:
@@ -42,3 +49,7 @@ onboarding:
     content:
       base-url: ${CONTENT_SERVICE_URL:http://localhost:8084}
       internal-token: ${CONTENT_INTERNAL_TOKEN:}
+  outbox:
+    enabled: ${OUTBOX_PUBLISHER_ENABLED:true}
+    fixed-delay: ${OUTBOX_PUBLISHER_FIXED_DELAY:5000}
+    batch-size: ${OUTBOX_PUBLISHER_BATCH_SIZE:20}

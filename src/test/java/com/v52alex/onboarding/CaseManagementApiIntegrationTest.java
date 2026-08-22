@@ -74,6 +74,19 @@ class CaseManagementApiIntegrationTest {
             .andExpect(jsonPath("$.review.status").value("REJECTED"))
             .andExpect(jsonPath("$.review.decidedBy").value("case.manager"))
             .andExpect(jsonPath("$.reviewEvents.length()").value(2));
+
+        Integer publishedOperationalEvents = jdbc.queryForObject("""
+            select count(*) from onboarding_outbox_event
+             where aggregate_id = ? and event_type in ('CASE_ASSIGNED', 'CASE_REJECTED')
+            """, Integer.class, caseId.toString());
+        org.assertj.core.api.Assertions.assertThat(publishedOperationalEvents).isEqualTo(2);
+
+        Integer schedulableOperationalEvents = jdbc.queryForObject("""
+            select count(*) from onboarding_outbox_event
+             where aggregate_id = ? and event_type in ('CASE_ASSIGNED', 'CASE_REJECTED')
+               and next_attempt_at is not null
+            """, Integer.class, caseId.toString());
+        org.assertj.core.api.Assertions.assertThat(schedulableOperationalEvents).isEqualTo(2);
     }
 
     @Test
