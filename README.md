@@ -78,13 +78,13 @@ curl http://localhost:8080/api/v1/onboarding-cases/{caseId}/interaction
 ## Case Management
 
 Completed onboarding cases enter an independent operational review queue with
-status `PENDING`. The Case Manager endpoints provide paginated search, aggregated
+status `PENDING`. The Onboarding Manager endpoints provide paginated search, aggregated
 case detail, self-assignment, documents, timeline, and audited approval or
 rejection. Rejection requires a reason and decisions are accepted only from the
 operator assigned to the case.
 
 All routes below `/api/v1/case-management` require a Keycloak bearer token with
-the realm role `case-manager`. Prospect onboarding routes remain public by product
+the realm role `onboarding-manager`. Prospect onboarding routes remain public by product
 decision. Configure JWT validation with `OIDC_ISSUER_URI` and `OIDC_JWK_SET_URI`;
 the latter allows containers to obtain keys through the internal Keycloak route
 while validating the public token issuer.

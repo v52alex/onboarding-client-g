@@ -27,7 +27,7 @@ class ProductCatalogAdminApiIntegrationTest {
         mockMvc.perform(get("/api/v1/admin/onboarding-products"))
             .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/admin/onboarding-products")
-                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_case-manager"))))
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_onboarding-manager"))))
             .andExpect(status().isForbidden());
     }
 

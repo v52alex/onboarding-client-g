@@ -105,6 +105,6 @@ class CaseManagementApiIntegrationTest {
     private org.springframework.test.web.servlet.request.RequestPostProcessor operator() {
         return jwt().jwt(token -> token.subject("operator-id")
                 .claim("preferred_username", "case.manager"))
-            .authorities(new SimpleGrantedAuthority("ROLE_case-manager"));
+            .authorities(new SimpleGrantedAuthority("ROLE_onboarding-manager"));
     }
 }

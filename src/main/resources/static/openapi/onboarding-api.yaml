@@ -312,7 +312,7 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/ManagedCasePage'}
         '401': {description: Missing or invalid token}
-        '403': {description: The token does not contain the case-manager role}
+        '403': {description: The token does not contain the onboarding-manager role}
   /api/v1/case-management/cases/{caseId}:
     get:
       operationId: getManagedCase

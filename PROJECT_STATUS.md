@@ -19,7 +19,7 @@ project_workflow:
 - Flyway V3 persiste revisión y eventos operativos; V4–V6 habilitan publicación,
   replay idempotente y recuperación de eventos pendientes.
 - Los endpoints `/api/v1/case-management/**` exigen el rol Keycloak
-  `case-manager`; el onboarding del prospecto permanece público.
+  `onboarding-manager`; el onboarding del prospecto permanece público.
 - La API entrega búsqueda paginada, expediente agregado, autoasignación y
   aprobación/rechazo con reglas de transición.
 - La suite Java pasó 37 pruebas; incluye `401`, `403`, ciclo operativo, motivo
