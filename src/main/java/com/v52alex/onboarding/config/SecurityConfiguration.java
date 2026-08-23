@@ -23,7 +23,8 @@ public class SecurityConfiguration {
         return http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/api/v1/case-management/**").hasRole("case-manager")
+                .requestMatchers("/api/v1/admin/onboarding-products/**").hasRole("platform-admin")
+                .requestMatchers("/api/v1/case-management/**").hasAnyRole("case-manager", "platform-admin")
                 .anyRequest().permitAll())
             .oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt ->
                 jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))

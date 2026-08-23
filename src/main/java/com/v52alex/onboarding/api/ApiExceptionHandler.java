@@ -5,6 +5,7 @@ import com.v52alex.onboarding.application.InvalidTransitionException;
 import com.v52alex.onboarding.application.InvalidActionPayloadException;
 import com.v52alex.onboarding.application.DocumentValidationException;
 import com.v52alex.onboarding.application.InvalidReviewTransitionException;
+import com.v52alex.onboarding.application.ProductNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import java.time.Instant;
@@ -25,6 +26,11 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(CaseNotFoundException.class)
     ProblemDetail notFound(CaseNotFoundException exception, HttpServletRequest request) {
+        return problem(HttpStatus.NOT_FOUND, exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    ProblemDetail productNotFound(ProductNotFoundException exception, HttpServletRequest request) {
         return problem(HttpStatus.NOT_FOUND, exception.getMessage(), request);
     }
 

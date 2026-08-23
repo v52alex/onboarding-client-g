@@ -16,6 +16,77 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/OnboardingProduct'
+  /api/v1/admin/onboarding-products:
+    get:
+      operationId: listManagedOnboardingProducts
+      summary: List all products for catalog administrators
+      security: [{keycloak: []}]
+      responses:
+        '200':
+          description: Active and inactive products
+          content:
+            application/json:
+              schema:
+                type: array
+                items: {$ref: '#/components/schemas/ManagedProduct'}
+        '403': {description: The token does not contain the platform-admin role}
+    post:
+      operationId: createOnboardingProduct
+      summary: Create a product in the catalog
+      security: [{keycloak: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductRequest'}
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedProduct'}
+        '409': {description: Product identifier or code already exists}
+  /api/v1/admin/onboarding-products/{id}:
+    put:
+      operationId: updateOnboardingProduct
+      summary: Update a product without changing its identifier
+      security: [{keycloak: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/ProductUpdateRequest'}
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedProduct'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /api/v1/admin/onboarding-products/{id}/status:
+    patch:
+      operationId: updateOnboardingProductStatus
+      summary: Activate or deactivate a product logically
+      security: [{keycloak: []}]
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string}}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [active]
+              properties: {active: {type: boolean}}
+      responses:
+        '200':
+          description: Product status updated
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ManagedProduct'}
+        '404': {$ref: '#/components/responses/NotFound'}
   /api/v1/onboarding-cases:
     post:
       operationId: startOnboarding
@@ -370,6 +441,33 @@ components:
         code: {type: string}
         name: {type: string}
         description: {type: string}
+    ManagedProduct:
+      allOf:
+        - {$ref: '#/components/schemas/OnboardingProduct'}
+        - type: object
+          required: [active, displayOrder]
+          properties:
+            active: {type: boolean}
+            displayOrder: {type: integer, minimum: 0}
+    ProductRequest:
+      type: object
+      required: [id, code, name, description, active, displayOrder]
+      properties:
+        id: {type: string, pattern: '[a-z0-9-]+'}
+        code: {type: string, pattern: '[A-Z0-9_]+'}
+        name: {type: string, maxLength: 150}
+        description: {type: string, maxLength: 500}
+        active: {type: boolean}
+        displayOrder: {type: integer, minimum: 0}
+    ProductUpdateRequest:
+      type: object
+      required: [code, name, description, active, displayOrder]
+      properties:
+        code: {type: string, pattern: '[A-Z0-9_]+'}
+        name: {type: string, maxLength: 150}
+        description: {type: string, maxLength: 500}
+        active: {type: boolean}
+        displayOrder: {type: integer, minimum: 0}
     InteractionResponse:
       type: object
       required: [caseId, step, terminal, status, metadata]
